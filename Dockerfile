@@ -5,7 +5,7 @@ RUN echo $GOPATH
 RUN mkdir /app-conf
 ADD /src /go/src/api
 
-COPY firebase.json /app-conf
+#COPY firebase.json /app-conf
 
 RUN cd /go/src/api && dep ensure && CGO_ENABLED=0 go get -u github.com/go-swagger/go-swagger/cmd/swagger 
 RUN cd /go/src/api && CGO_ENABLED=0 swagger generate spec -m -o ./doc/swagger.json
