@@ -6,7 +6,7 @@ RUN apk update && apk add curl && apk add git
 RUN mkdir /app-conf
 ADD /src /go/src/api
 
-RUN CGO_ENABLED=0 go get -u github.com/go-swagger/go-swagger/cmd/swagger 
+#RUN CGO_ENABLED=0 go get -u github.com/go-swagger/go-swagger/cmd/swagger 
 #RUN cd /go/src/api && CGO_ENABLED=0 swagger generate spec -m -o ./doc/swagger.json
 RUN cd /go/src/api && CGO_ENABLED=0 go test -mod vendor -cover -failfast && go build -mod vendor -o api 
 
