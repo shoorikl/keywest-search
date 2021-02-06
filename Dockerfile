@@ -1,5 +1,5 @@
 FROM golang:1.14-alpine AS build-env
-ENV MYSQL_DATASOURCE=${MYSQL_DATASOURCE}
+#ENV MYSQL_DATASOURCE=${MYSQL_DATASOURCE}
 RUN apk update && apk add curl && apk add git && curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 RUN echo $GOPATH
 RUN mkdir /app-conf
