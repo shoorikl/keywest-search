@@ -1,12 +1,12 @@
 #!/bin/sh
 
 
-if [ $CF_BRANCH == "master" ]
+if [ $CF_BRANCH_TAG_NORMALIZED == "master" ]
 then
     export CONTEXT="www"
     export REPLICAS=1
 else
-    export CONTEXT="${CF_BRANCH}"
+    export CONTEXT="${CF_BRANCH_TAG_NORMALIZED}"
     export REPLICAS=1
 fi
 
@@ -15,7 +15,7 @@ printenv
 # echo "CONTEXT=${CONTEXT}"
 # #export TAG="${CICD_EXECUTION_SEQUENCE}-${CICD_GIT_BRANCH}-${CICD_GIT_COMMIT}"
 
-# sed -i 's^${CONTEXT}^'"$CONTEXT^g" deployment.yaml
+sed -i 's^{{CONTEXT}}^'"$CONTEXT^g" ./keywest-search/deployment.yaml
 # sed -i 's^${REPLICAS}^'"$REPLICAS^g" deployment.yaml
 # #sed -i 's^${TAG}^'"$TAG^g" deployment.yaml
 # sed -i 's^${CICD_EXECUTION_SEQUENCE}^'"$CICD_EXECUTION_SEQUENCE^g" ./src/*.go
