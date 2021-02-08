@@ -73,6 +73,7 @@ metadata:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     acme.cert-manager.io/http01-ingress-class: nginx
     kubernetes.io/tls-acme: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
   labels:
     app: "{{CF_BRANCH}}-keywest-search"
   name: "{{CF_BRANCH}}-keywest-search"
