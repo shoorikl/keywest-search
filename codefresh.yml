@@ -35,7 +35,7 @@ steps:
     image: codefresh/cf-deploy-kubernetes:master
     commands:
       - cat /codefresh/volume/sensitive/.kube/config
-      - /cf-deploy-kubernetes ./keywest-search/deployment.yml  
+      - /cf-deploy-kubernetes ./keywest-search/deployment.yaml  
     environment:
       - KUBECONTEXT=k8s-demo@Google
       - KUBERNETES_NAMESPACE=my-namespace
