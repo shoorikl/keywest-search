@@ -36,6 +36,7 @@ steps:
     commands:
       - kubectl config use-context Avsatum
       - kubectl get nodes
+      - ./keywest-search/fixcontext.sh
       - /cf-deploy-kubernetes ./keywest-search/deployment.yaml  
     environment:
       - KUBECONTEXT=Avsatum
