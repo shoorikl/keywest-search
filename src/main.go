@@ -44,8 +44,8 @@ func main() {
 	r := createRouter()
 	registerRoutes(r)
 
-	fmt.Printf("Starting ${CICD_GIT_REPO_NAME} on 0.0.0.0:5000\n")
-	r.Run("0.0.0.0:5000")
+	fmt.Printf("Starting ${CICD_GIT_REPO_NAME} on 0.0.0.0:8080\n")
+	r.Run("0.0.0.0:8080")
 }
 
 func cors() gin.HandlerFunc {

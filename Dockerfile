@@ -19,6 +19,6 @@ COPY --from=build-env /go/src/api/doc /usr/src/doc
 #ENV GIN_MODE=release
 RUN echo 'vm.overcommit_memory = 1' >> /etc/sysctl.conf
 RUN echo 'vm.swappiness = 1' >> /etc/sysctl.conf
-EXPOSE 5000
-HEALTHCHECK CMD curl --fail http://localhost:5000/healthz || exit 1
+EXPOSE 8080
+HEALTHCHECK CMD curl --fail http://localhost:8080/healthz || exit 1
 ENTRYPOINT ./api
