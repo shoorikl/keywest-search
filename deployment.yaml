@@ -79,7 +79,7 @@ metadata:
   namespace: search
 spec:
   rules:
-    - host: ${CONTEXT}.avsatum.net
+    - host: {{CONTEXT}}.avsatum.net
       http:
         paths:
           - backend:
