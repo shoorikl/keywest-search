@@ -1,0 +1,92 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{CF_BRANCH}}-keywest-search"
+  namespace: search
+  labels:
+    app: "{{CF_BRANCH}}-keywest-search"
+spec:
+  replicas: {{REPLICAS}}
+  selector:
+    matchLabels:
+      app: "{{CF_BRANCH}}-keywest-search"
+  template:
+    metadata:
+      labels:
+        app: "{{CF_BRANCH}}-keywest-search"
+    spec:
+      containers:
+        - name: "{{CF_BRANCH}}-keywest-search"
+          image: "gcr.io/kube-211916/keywest-search:{{CF_SHORT_REVISION}}"
+          ports:
+            - name: http
+              containerPort: 8080
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 3
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: 8080
+              scheme: HTTP
+            periodSeconds: 10
+            successThreshold: 1
+          resources:
+            requests:
+              memory: "100Mi"
+              cpu: "100m"
+            limits:
+              memory: "100Mi"
+              cpu: "300m"
+      restartPolicy: Always
+      imagePullSecrets:
+        - name: gcr
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{CF_BRANCH}}-keywest-search"
+  namespace: search
+  labels:
+    app: "{{CF_BRANCH}}-keywest-search"
+spec:
+  ports:
+    - name: default
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app: "{{CF_BRANCH}}-keywest-search"
+  type: ClusterIP
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    certmanager.k8s.io/acme-challenge-type: http01
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    acme.cert-manager.io/http01-ingress-class: nginx
+    kubernetes.io/tls-acme: "true"
+  labels:
+    app: "{{CF_BRANCH}}-keywest-search"
+  name: "{{CF_BRANCH}}-keywest-search"
+  namespace: search
+spec:
+  rules:
+    - host: ${CONTEXT}.avsatum.net
+      http:
+        paths:
+          - backend:
+              serviceName: "{{CF_BRANCH}}-keywest-search"
+              servicePort: 8080
+            path: /api/search
+  tls:
+    - hosts:
+        - ${CONTEXT}.avsatum.net
+      secretName: ${CONTEXT}-avsatum-net-tls

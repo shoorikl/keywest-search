@@ -25,19 +25,21 @@ steps:
     type: "build"
     image_name: "keywest-search"
     working_directory: "${{clone}}"
-    tag: "${{CF_BRANCH_TAG_NORMALIZED}}"
+    tag: "${{CF_SHORT_REVISION}}"
     dockerfile: "Dockerfile"
     stage: "build"
-    
+  
   deploy:
-    title: deploying to cluster
-    type: deploy
-    arguments:
-      kind: kubernetes
-      cluster: Avsatum
-      namespace: search
-      service: keywest-search
-      stage: "deploy"
+    stage: "deploy"
+    title: K8s Deploy
+    image: codefresh/cf-deploy-kubernetes:master
+    commands:
+      - /cf-deploy-kubernetes deployment.yml  
+    environment:
+      - KUBECONTEXT=k8s-demo@Google
+      - KUBERNETES_NAMESPACE=my-namespace
+      - MY_CUSTOM_LABEL=build-id-${{CF_BUILD_ID}} 
+      - REPLICAS=1
 
 
 
