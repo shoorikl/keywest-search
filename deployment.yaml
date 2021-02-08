@@ -88,5 +88,5 @@ spec:
             path: /api/search
   tls:
     - hosts:
-        - ${CONTEXT}.avsatum.net
-      secretName: ${CONTEXT}-avsatum-net-tls
+        - {{CONTEXT}}.avsatum.net
+      secretName: {{CONTEXT}}-avsatum-net-tls
