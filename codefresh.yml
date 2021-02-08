@@ -34,7 +34,7 @@ steps:
     title: K8s Deploy
     image: codefresh/cf-deploy-kubernetes:master
     commands:
-      - ls -l
+      - cat /codefresh/volume/sensitive/.kube/config
       - /cf-deploy-kubernetes ./keywest-search/deployment.yml  
     environment:
       - KUBECONTEXT=k8s-demo@Google
