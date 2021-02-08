@@ -34,6 +34,7 @@ steps:
     title: K8s Deploy
     image: codefresh/cf-deploy-kubernetes:master
     commands:
+      - kubectl config use-context Avsatum
       - kubectl get nodes
       - /cf-deploy-kubernetes ./keywest-search/deployment.yaml  
     environment:
