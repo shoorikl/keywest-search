@@ -34,10 +34,10 @@ steps:
     title: K8s Deploy
     image: codefresh/cf-deploy-kubernetes:master
     commands:
-      - cat /codefresh/volume/sensitive/.kube/config
+      - kubectl get nodes
       - /cf-deploy-kubernetes ./keywest-search/deployment.yaml  
     environment:
-      - KUBECONTEXT=k8s-demo@Google
+      - KUBECONTEXT=Avsatum
       - KUBERNETES_NAMESPACE=my-namespace
       - MY_CUSTOM_LABEL=build-id-${{CF_BUILD_ID}} 
       - REPLICAS=1
