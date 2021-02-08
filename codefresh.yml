@@ -39,7 +39,7 @@ steps:
       - /cf-deploy-kubernetes ./keywest-search/deployment.yaml  
     environment:
       - KUBECONTEXT=Avsatum
-      - KUBERNETES_NAMESPACE=my-namespace
+      - KUBERNETES_NAMESPACE=search
       - MY_CUSTOM_LABEL=build-id-${{CF_BUILD_ID}} 
       - REPLICAS=1
 
