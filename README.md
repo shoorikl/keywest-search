@@ -1,3 +1,5 @@
+[![Codefresh build status]( https://g.codefresh.io/api/badges/pipeline/alexlokshin2zick/keywest-search?type=cf-1&key=eyJhbGciOiJIUzI1NiJ9.NjAxZjBhOWFiYTdlMWUzZmViYzAwYjEz.tFPynrS7waD2rKbKEpagioyfksx4_0AfbwCxwrVVOdw)]( https://g.codefresh.io/pipelines/edit/new/builds?id=601f0b2358477eb0aabee2c9&pipeline=keywest-search)
+
 # keywest-search
 
 Provides access to insertion and retrieval of searchable data.
