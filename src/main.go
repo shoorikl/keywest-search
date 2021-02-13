@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/gob"
 	"flag"
 	"fmt"
@@ -12,6 +13,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	coreV1 "k8s.io/api/core/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -57,6 +61,8 @@ func main() {
 
 var clientset *kubernetes.Clientset
 var inCluster bool = false
+var serviceName string = "master-keywest-search"
+var serviceNS string = "search"
 
 func betterPanic(message string, args ...string) {
 	temp := fmt.Sprintf(message, args)
@@ -101,6 +107,40 @@ func discoverPeers() {
 	if err != nil {
 		betterPanic(err.Error())
 	}
+
+	fsel := fields.OneTermEqualSelector("metadata.name", serviceName).String()
+	log.Printf("attempted to watch, %v", fsel)
+	watcher, err := clientset.CoreV1().Endpoints(serviceNS).Watch(context.Background(), v1.ListOptions{
+		FieldSelector: fsel,
+	})
+	if err != nil {
+		log.Fatalf("failed watching endpoints, %v", err)
+	}
+
+	go func() {
+		ch := watcher.ResultChan()
+		for event := range ch {
+			ep, ok := event.Object.(*coreV1.Endpoints)
+			if !ok {
+				log.Printf("unexpected type %T", ep)
+			}
+			//var ps []string
+			for _, s := range ep.Subsets {
+				for _, a := range s.Addresses {
+					fmt.Printf("Peer: %v\n", a)
+					// ps = append(ps, fmt.Sprintf(
+					// 	"%s://%s.%s:%s%s",
+					// 	*scheme,
+					// 	a.TargetRef.Name,
+					// 	a.TargetRef.Namespace,
+					// 	*port,
+					// 	*path))
+				}
+			}
+			//log.Printf("setting peers %#v", ps)
+			//peers.Set(ps...)
+		}
+	}()
 }
 
 func cors() gin.HandlerFunc {
