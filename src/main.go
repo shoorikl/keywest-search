@@ -114,7 +114,7 @@ func discoverPeers() {
 		FieldSelector: fsel,
 	})
 	if err != nil {
-		log.Fatalf("failed watching endpoints, %v", err)
+		log.Fatalf("failed watching endpoints, %s", err.Error())
 	}
 
 	go func() {

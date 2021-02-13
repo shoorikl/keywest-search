@@ -16,6 +16,7 @@ spec:
       labels:
         app: "{{CF_BRANCH}}-keywest-search"
     spec:
+      serviceAccountName: endpoint-reader
       containers:
         - name: "{{CF_BRANCH}}-keywest-search"
           image: "gcr.io/kube-211916/keywest-search:{{CF_SHORT_REVISION}}"
