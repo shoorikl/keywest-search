@@ -56,7 +56,7 @@ func main() {
 }
 
 var clientset *kubernetes.Clientset
-var inCluster bool
+var inCluster bool = false
 
 func betterPanic(message string, args ...string) {
 	temp := fmt.Sprintf(message, args)
@@ -90,12 +90,11 @@ func discoverPeers() {
 		}
 		inCluster = true
 	}
-	inCluster = false
 
 	if inCluster {
 		log.Printf("Configured to run in in-cluster mode.\n")
 	} else {
-		log.Printf("Configured to run in out-of cluster mode.\nService testing other than NodePort is not supported.")
+		log.Printf("Configured to run in out-of cluster mode.\n")
 	}
 
 	clientset, err = kubernetes.NewForConfig(config)
