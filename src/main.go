@@ -2,18 +2,25 @@ package main
 
 import (
 	"encoding/gob"
+	"flag"
 	"fmt"
+	"log"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 var storageLocation = "."
 
 func main() {
+	discoverPeers()
 	gob.Register([]interface{}{})
 	gob.Register(map[string]interface{}{})
 
@@ -46,6 +53,55 @@ func main() {
 
 	fmt.Printf("Starting ${CICD_GIT_REPO_NAME} on 0.0.0.0:8080\n")
 	r.Run("0.0.0.0:8080")
+}
+
+var clientset *kubernetes.Clientset
+var inCluster bool
+
+func betterPanic(message string, args ...string) {
+	temp := fmt.Sprintf(message, args)
+	fmt.Printf("%s\n\n", temp)
+	os.Exit(1)
+}
+
+func homeDir() string {
+	if h := os.Getenv("HOME"); h != "" {
+		return h
+	}
+	return os.Getenv("USERPROFILE") // windows
+}
+
+func discoverPeers() {
+	var kubeconfig *string
+	home := homeDir()
+	if home != "" {
+		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
+	} else {
+		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
+	}
+	flag.Parse()
+
+	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	if err != nil {
+		log.Println("Local configuration not found, trying in-cluster configuration.")
+		config, err = rest.InClusterConfig()
+		if err != nil {
+			betterPanic(err.Error())
+		}
+		inCluster = true
+	}
+	inCluster = false
+
+	if inCluster {
+		log.Printf("Configured to run in in-cluster mode.\n")
+	} else {
+		log.Printf("Configured to run in out-of cluster mode.\nService testing other than NodePort is not supported.")
+	}
+
+	clientset, err = kubernetes.NewForConfig(config)
+	if err != nil {
+		betterPanic(err.Error())
+	}
 }
 
 func cors() gin.HandlerFunc {
