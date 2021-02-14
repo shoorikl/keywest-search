@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/gob"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -13,6 +14,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang/groupcache"
 	coreV1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -22,9 +24,11 @@ import (
 )
 
 var storageLocation = "."
+var pool *groupcache.HTTPPool
+var group *groupcache.Group
 
 func main() {
-	discoverPeers()
+	pool, group = discoverPeers()
 	gob.Register([]interface{}{})
 	gob.Register(map[string]interface{}{})
 
@@ -63,6 +67,7 @@ var clientset *kubernetes.Clientset
 var inCluster bool = false
 var serviceName string = "master-keywest-search"
 var serviceNS string = "search"
+var store map[string]string = make(map[string]string)
 
 func betterPanic(message string, args ...string) {
 	temp := fmt.Sprintf(message, args)
@@ -77,7 +82,7 @@ func homeDir() string {
 	return os.Getenv("USERPROFILE") // windows
 }
 
-func discoverPeers() {
+func discoverPeers() (*groupcache.HTTPPool, *groupcache.Group) {
 	var kubeconfig *string
 	home := homeDir()
 	if home != "" {
@@ -114,33 +119,53 @@ func discoverPeers() {
 		FieldSelector: fsel,
 	})
 	if err != nil {
-		log.Fatalf("failed watching endpoints, %s", err.Error())
+		log.Printf("Failed to start	 watching endpoints, %s", err.Error())
 	}
+
+	self := "unknown"
+	if self, err = os.Hostname(); err != nil {
+		log.Printf("could not determine hostname, %v", err)
+	}
+
+	peers := groupcache.NewHTTPPool(fmt.Sprintf("%s://%s:%s", "http", self, "8080"))
+
+	group := groupcache.NewGroup("users", 3000000, groupcache.GetterFunc(
+		func(ctx context.Context, key string, dest groupcache.Sink) error {
+			log.Println("looking up", key)
+			v, ok := store[key]
+			if !ok {
+				return errors.New("key not found")
+			}
+			dest.SetBytes([]byte(v))
+			return nil
+		},
+	))
 
 	go func() {
 		ch := watcher.ResultChan()
 		for event := range ch {
+			fmt.Printf("Scanning...\n")
 			ep, ok := event.Object.(*coreV1.Endpoints)
 			if !ok {
 				log.Printf("unexpected type %T", ep)
 			}
-			//var ps []string
+			var ps []string
 			for _, s := range ep.Subsets {
 				for _, a := range s.Addresses {
-					fmt.Printf("Peer: %v\n", a)
-					// ps = append(ps, fmt.Sprintf(
-					// 	"%s://%s.%s:%s%s",
-					// 	*scheme,
-					// 	a.TargetRef.Name,
-					// 	a.TargetRef.Namespace,
-					// 	*port,
-					// 	*path))
+					//fmt.Printf("Peer: %v\n", a)
+					ps = append(ps, fmt.Sprintf(
+						"%s://%s.%s:%s",
+						"http",
+						a.TargetRef.Name,
+						a.TargetRef.Namespace,
+						"8080"))
 				}
 			}
-			//log.Printf("setting peers %#v", ps)
-			//peers.Set(ps...)
+			log.Printf("setting peers %#v", ps)
+			peers.Set(ps...)
 		}
 	}()
+	return peers, group
 }
 
 func cors() gin.HandlerFunc {
@@ -230,6 +255,37 @@ func registerRoutes(r *gin.Engine) {
 	r.GET("/api/search/clear", clearIndex)
 
 	r.DELETE("/api/search/delete/:id", deleteRecord)
+
+	r.Any("/_groupcache/", gin.WrapF(pool.ServeHTTP))
+	r.GET("/api/search/lookup/:key", func(c *gin.Context) {
+		key := c.Param("key")
+		var b []byte
+		err := group.Get(context.Background(), key, groupcache.AllocatingByteSliceSink(&b))
+		if err != nil {
+			c.JSON(500, gin.H{
+				"Status": "Error",
+				"Error":  err.Error(),
+			})
+		} else {
+			c.JSON(500, gin.H{
+				"Status": "OK",
+				"Value":  string(b),
+			})
+		}
+	})
+
+	r.GET("/api/search/add/:key/:value", func(c *gin.Context) {
+		key := c.Param("key")
+		value := c.Param("value")
+		store[key] = value
+
+		var b []byte
+		group.Get(context.Background(), key, groupcache.AllocatingByteSliceSink(&b))
+
+		c.JSON(500, gin.H{
+			"Status": "OK",
+		})
+	})
 
 	r.Static("/api/search/swaggerui/", "doc/swagger-ui-dist")
 	r.StaticFile("/api/search/swagger.json", "./doc/swagger.json")
