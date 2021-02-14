@@ -127,7 +127,7 @@ func discoverPeers() (*groupcache.HTTPPool, *groupcache.Group) {
 		log.Printf("could not determine hostname, %v", err)
 	}
 
-	peers := groupcache.NewHTTPPool(fmt.Sprintf("%s://%s:%s", "http", self, "8080"))
+	peers := groupcache.NewHTTPPool(fmt.Sprintf("%s://%s:%s/_groupcache/", "http", self, "8080"))
 
 	group := groupcache.NewGroup("users", 3000000, groupcache.GetterFunc(
 		func(ctx context.Context, key string, dest groupcache.Sink) error {
@@ -154,7 +154,7 @@ func discoverPeers() (*groupcache.HTTPPool, *groupcache.Group) {
 				for _, a := range s.Addresses {
 					//fmt.Printf("Peer: %v\n", a)
 					ps = append(ps, fmt.Sprintf(
-						"%s://%s.%s:%s",
+						"%s://%s.%s:%s/_groupcache/",
 						"http",
 						a.TargetRef.Name,
 						a.TargetRef.Namespace,
